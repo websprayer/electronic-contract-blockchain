@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: Auth
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+#        username: nacos
+#        password: nacos
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/blockchain?serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+
+  webflux:
+    cors:
+      allowed-origins: http://localhost:8080
+      allow-credentials: true
+
+#  data:
+#    redis:
+#      port: 6379
+#      host: localhost
+
+server:
+  port: 8082
+
+  servlet:
+    session:
+      timeout: PT30M
+      persistent: true
+
+app:
+  storage:
+    unsigned-path: ${STORAGE_PATH:${user.home}/contracts/unsigned/}
+    signed-path: ${STORAGE_PATH_SIGNED:${user.home}/contracts/signed/}
+
+logging:
+  level:
+    org.springframework: DEBUG
+    com.resume: DEBUG
+
+
