@@ -1,0 +1,41 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: fabric-client-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+#        username: nacos
+#        password: nacos
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/blockchain?serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  webflux:
+    cors:
+      allowed-origins: http://localhost:8080
+      allow-credentials: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+fabric:
+  peer-endpoint: ${FABRIC_PEER_ENDPOINT:localhost:7051}
+  override-authority: ${FABRIC_OVERRIDE_AUTHORITY:peer0.org1.example.com}
+  msp-id: ${FABRIC_MSP_ID:Org1MSP}
+  channel-name: ${FABRIC_CHANNEL_NAME:mychannel}
+  chaincode-name: ${FABRIC_CHAINCODE_NAME:contractsigning}
+
+logging:
+  level:
+    org.springframework: INFO
+    com.fabricService: DEBUG
