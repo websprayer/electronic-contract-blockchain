@@ -1,0 +1,45 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.ipr
+*.iws
+*.iml
+.idea/
+.mvn/wrapper/
+
+# Spring Boot
+*.log
+/logs/
+
+# Environment & Secrets
+.env
+application-local.yml
+application-prod.yml
+
+# Fabric crypto material (do not commit actual keys/certs)
+ElectronicSigning/FabricGateway/src/main/resources/crypto/
+
+# Old FabricGateway location (moved to ElectronicSigning/FabricGateway/)
+ElectronicSigning/.mvn/FabricGateway/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Fabric crypto material (do not commit actual keys/certs)
+ElectronicSigning/FabricGateway/src/main/resources/crypto/
+
+# PDF contract files
+contracts/
+
+# Reports & documents (binary files)
+*.pdf
+*.pptx
+*.docx
+
+# Misc
+untitled/
+新建 文本文档.txt
