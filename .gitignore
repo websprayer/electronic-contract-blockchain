@@ -18,27 +18,28 @@ target/
 .env
 application-local.yml
 application-prod.yml
+*.pem
+*.key
+*.crt
 
 # Fabric crypto material (do not commit actual keys/certs)
-ElectronicSigning/FabricGateway/src/main/resources/crypto/
-
-# Old FabricGateway location (moved to ElectronicSigning/FabricGateway/)
-ElectronicSigning/.mvn/FabricGateway/
+ElectronicSigning/FabricGateway/src/main/resources/crypto/*
+!ElectronicSigning/FabricGateway/src/main/resources/crypto/.gitkeep
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Fabric crypto material (do not commit actual keys/certs)
-ElectronicSigning/FabricGateway/src/main/resources/crypto/
-
 # PDF contract files
 contracts/
 
-# Reports & documents (binary files)
+# Generated or unrelated documents
 *.pdf
 *.pptx
 *.docx
+*.zip
+*.png
+*:Zone.Identifier
 
 # Misc
 untitled/

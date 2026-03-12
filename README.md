@@ -1,58 +1,130 @@
-# Blockchain Electronic Contract Signing System
+# Electronic Contract Signing System
 
-A distributed electronic contract signing system built on **Hyperledger Fabric**, with a Spring Boot microservices backend.
+A Java-based electronic contract signing system built with `Spring Boot` and `Hyperledger Fabric`.
+
+This repository is a cleaned-up public snapshot of a course / thesis-style project. The public repo was organized and published later than the original development work, so the GitHub repository creation date reflects the portfolio publishing time rather than the first day the project was developed.
+
+## Project Overview
+
+The system is designed for contract creation, signing, storage, and integrity verification. The off-chain services handle user management, file storage, and business APIs, while contract metadata and hashes are anchored on a Fabric blockchain network.
+
+Core capabilities:
+
+- user registration and login with JWT-based authentication
+- PDF upload and content hashing
+- contract creation and query APIs
+- blockchain-backed contract verification
+- separation between business service and Fabric gateway service
 
 ## Architecture
 
+```text
+Client
+  -> AuthService
+       - authentication
+       - file upload / contract file management
+       - PDF hash generation
+       - user identity management
+  -> FabricGateway
+       - contract CRUD on Fabric
+       - contract integrity verification
+       - blockchain interaction through Fabric SDK
+
+Persistence / infrastructure
+  - MySQL
+  - Nacos
+  - Hyperledger Fabric test network
 ```
-┌─────────────────┐       ┌──────────────────┐       ┌─────────────────────┐
-│   Frontend      │──────▶│  AuthService      │       │   FabricGateway     │
-│  (Vue/React)    │       │  Port: 8082       │◀─────▶│   Port: 8084        │
-└─────────────────┘       │  - User auth      │ Feign │  - Fabric SDK       │
-                          │  - File upload    │       │  - Contract CRUD    │
-                          │  - PDF hashing    │       │  - Verification     │
-                          └──────────────────┘       └─────────────────────┘
-                                    │                           │
-                                    ▼                           ▼
-                              ┌──────────┐             ┌──────────────┐
-                              │  MySQL   │             │  Hyperledger │
-                              │blockchain│             │    Fabric    │
-                              └──────────┘             └──────────────┘
+
+## Repository Structure
+
+```text
+ElectronicSigning/
+  AuthService/        Spring Boot service for auth, file handling and user-related APIs
+  FabricGateway/      Spring Boot service for blockchain interaction
+  pom.xml             parent Maven build
+
+fabric-contract/
+  Java chaincode for contract records
+
+fabric-samples/
+  Local Fabric test-network dependency used during development
 ```
 
-## Modules
+## Tech Stack
 
-| Module | Description |
-|--------|-------------|
-| `fabric-contract/` | Hyperledger Fabric chaincode (Java) |
-| `ElectronicSigning/AuthService/` | User authentication & file management (port 8082) |
-| `ElectronicSigning/FabricGateway/` | Fabric blockchain gateway service (port 8084) |
-| `fabric-samples/` | Fabric test network configuration |
+- Java 21
+- Spring Boot
+- Spring Security
+- Spring Cloud OpenFeign
+- MySQL
+- Nacos
+- Hyperledger Fabric 2.5
+- Maven
 
-## Prerequisites
+## Main Modules
+
+### AuthService
+
+Responsibilities:
+
+- user registration and login
+- JWT issuance and authentication
+- contract file upload and download
+- unsigned / signed contract file management
+- PDF hashing before blockchain submission
+
+Example endpoints:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/getId`
+- `POST /auth/readcontract`
+- `GET /file/listunsigned`
+- `GET /file/listsigned`
+- `GET /file/download/{filename}`
+- `POST /file/savesginedContract`
+
+### FabricGateway
+
+Responsibilities:
+
+- submit contract records to Fabric
+- query contract records from chaincode
+- verify on-chain hash against uploaded file hash
+- provide blockchain-facing CRUD APIs to upper-layer services
+
+Example endpoints:
+
+- `POST /api/contracts/create`
+- `GET /api/contracts/read/{id}`
+- `PUT /api/contracts/update`
+- `DELETE /api/contracts/delete/{id}`
+- `GET /api/contracts/all`
+- `POST /api/contracts/verify`
+
+### Chaincode
+
+Located in `fabric-contract/`, the chaincode manages contract records on the ledger, including:
+
+- create contract
+- read contract
+- update contract
+- delete contract
+- check existence
+- list all contracts
+
+## Local Setup
+
+### Prerequisites
 
 - Java 21
 - Maven 3.8+
 - MySQL 8.0
-- Nacos 2.x (service discovery)
+- Nacos 2.x
 - Hyperledger Fabric 2.5 test network
 
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DB_URL` | `jdbc:mysql://localhost:3306/blockchain` | Database URL |
-| `DB_USERNAME` | `root` | Database username |
-| `DB_PASSWORD` | *(empty)* | Database password |
-| `STORAGE_PATH` | `~/contracts/unsigned/` | Unsigned contracts directory |
-| `STORAGE_PATH_SIGNED` | `~/contracts/signed/` | Signed contracts directory |
-| `FABRIC_PEER_ENDPOINT` | `localhost:7051` | Fabric peer gRPC endpoint |
-| `FABRIC_CHANNEL_NAME` | `mychannel` | Fabric channel name |
-| `FABRIC_CHAINCODE_NAME` | `contractsigning` | Chaincode name |
-
-## Quick Start
-
-### 1. Start Hyperledger Fabric Test Network
+### 1. Start Fabric test network
 
 ```bash
 cd fabric-samples/test-network
@@ -60,89 +132,62 @@ cd fabric-samples/test-network
 ./network.sh deployCC -ccn contractsigning -ccp ../../fabric-contract -ccl java
 ```
 
-### 2. Configure Fabric crypto material
+### 2. Prepare local secrets and certificates
 
-Copy the admin certificate and private key to:
-```
-ElectronicSigning/FabricGateway/src/main/resources/crypto/cert.pem
-ElectronicSigning/FabricGateway/src/main/resources/crypto/private_key.pem
-ElectronicSigning/FabricGateway/src/main/resources/crypto/ca.crt
-```
+This repository does not include real private keys or Fabric certificates.
 
-### 3. Create MySQL database
+You need to provide:
+
+- `ElectronicSigning/AuthService/src/main/resources/private_key.pem`
+- `ElectronicSigning/AuthService/src/main/resources/public_key.pem`
+- `ElectronicSigning/FabricGateway/src/main/resources/public_key.pem`
+- `ElectronicSigning/FabricGateway/src/main/resources/crypto/cert.pem`
+- `ElectronicSigning/FabricGateway/src/main/resources/crypto/private_key.pem`
+- `ElectronicSigning/FabricGateway/src/main/resources/crypto/ca.crt`
+
+### 3. Create database
 
 ```sql
 CREATE DATABASE blockchain CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### 4. Start Nacos
+### 4. Configure environment variables
+
+| Variable | Default |
+| --- | --- |
+| `DB_URL` | `jdbc:mysql://localhost:3306/blockchain?serverTimezone=UTC` |
+| `DB_USERNAME` | `root` |
+| `DB_PASSWORD` | empty |
+| `STORAGE_PATH` | `${user.home}/contracts/unsigned/` |
+| `STORAGE_PATH_SIGNED` | `${user.home}/contracts/signed/` |
+| `FABRIC_PEER_ENDPOINT` | `localhost:7051` |
+| `FABRIC_OVERRIDE_AUTHORITY` | `peer0.org1.example.com` |
+| `FABRIC_MSP_ID` | `Org1MSP` |
+| `FABRIC_CHANNEL_NAME` | `mychannel` |
+| `FABRIC_CHAINCODE_NAME` | `contractsigning` |
+
+### 5. Start dependencies
 
 ```bash
-# Download and start Nacos 2.x
 sh startup.sh -m standalone
 ```
 
-### 5. Build and run services
+### 6. Build and run
 
 ```bash
 cd ElectronicSigning
-
-# Set credentials
-export DB_PASSWORD=your_password
-
-# Build all modules
 mvn clean package -DskipTests
 
-# Start AuthService
 java -jar AuthService/target/AuthService-*.jar
-
-# Start FabricGateway
 java -jar FabricGateway/target/FabricGateway-*.jar
 ```
 
-## API Endpoints
+## Notes
 
-### AuthService (port 8082)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | User login, returns JWT |
-| GET  | `/auth/getId` | Get current user ID |
-| POST | `/auth/readcontract` | Upload PDF and get SHA-256 hash |
-| GET  | `/file/listunsigned` | List unsigned contracts |
-| GET  | `/file/listsigned` | List signed contracts |
-| GET  | `/file/download/{filename}` | Download contract PDF |
-| POST | `/file/savesginedContract` | Save signed contract |
-
-### FabricGateway (port 8084)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/contracts/create` | Create contract on blockchain |
-| GET  | `/api/contracts/read/{id}` | Read contract from blockchain |
-| PUT  | `/api/contracts/update` | Update contract |
-| DELETE | `/api/contracts/delete/{id}` | Delete contract |
-| GET  | `/api/contracts/all` | Get all contracts |
-| POST | `/api/contracts/verify` | Verify contract integrity |
-
-## Smart Contract (Chaincode)
-
-Located in `fabric-contract/`, implements:
-- `CreateContract(contractID, partyA, partyB, contentHash, signTime)`
-- `ReadContract(contractID)`
-- `UpdateContract(contractID, partyA, partyB, contentHash, signTime)`
-- `DeleteContract(contractID)`
-- `ContractExists(contractID)`
-- `GetAllContracts()`
-
-## Security
-
-- JWT authentication (RSA-256) on all protected endpoints
-- Per-user EC P-256 Fabric identities generated at registration
-- SHA-256 content hashing for contract integrity verification
-- Contract immutability guaranteed by blockchain ledger
+- This repository is intended as a portfolio / learning project snapshot, not a production-ready deployment template.
+- Some local environment assumptions from the original coursework setup have been preserved.
+- The `fabric-samples/` directory is kept here because it was used during local development and integration testing.
 
 ## Author
 
-Liu Bai — Undergraduate Thesis Project
+Liu Qiyuan
